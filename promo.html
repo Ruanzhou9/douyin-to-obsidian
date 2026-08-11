@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>douyin-to-obsidian — 抖音内容，秒变知识</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background: #0D0D0D;
+    color: #FFFFFF;
+    overflow-x: hidden;
+  }
+
+  /* Hero Section */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 2rem;
+    text-align: center;
+    background: radial-gradient(ellipse at 50% 30%, rgba(0,212,255,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, rgba(74,144,217,0.05) 0%, transparent 50%),
+                #0D0D0D;
+  }
+
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  .logo {
+    font-size: 1rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #00D4FF;
+    font-weight: 500;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(0,212,255,0.2);
+    padding: 0.5rem 1.5rem;
+    border-radius: 100px;
+    background: rgba(0,212,255,0.05);
+  }
+
+  .title {
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #FFFFFF 0%, #00D4FF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: clamp(1.1rem, 2vw, 1.5rem);
+    color: #888888;
+    font-weight: 400;
+    max-width: 600px;
+    margin-bottom: 3rem;
+    line-height: 1.6;
+  }
+
+  .tagline {
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
+    color: #00D4FF;
+    font-weight: 300;
+    margin-bottom: 3rem;
+    letter-spacing: 0.05em;
+  }
+
+  .tagline small {
+    display: block;
+    font-size: 1rem;
+    color: #666;
+    margin-top: 0.5rem;
+    font-weight: 400;
+  }
+
+  .terminal {
+    background: #1A1A1A;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 1.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    line-height: 1.8;
+    text-align: left;
+    max-width: 600px;
+    width: 100%;
+    margin-bottom: 2rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .terminal .prompt { color: #00C853; }
+  .terminal .cmd { color: #E0E0E0; }
+  .terminal .comment { color: #666; }
+  .terminal .success { color: #00C853; }
+  .terminal .highlight { color: #00D4FF; }
+  .terminal .dim { color: #555; }
+
+  .terminal-line { white-space: nowrap; overflow: hidden; }
+  .terminal-line .blink { animation: blink 1s step-end infinite; }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  .badge-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+
+  .badge {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 0.4rem 1rem;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    color: #AAAAAA;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .badge .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .dot.cyan { background: #00D4FF; }
+  .dot.green { background: #00C853; }
+  .dot.blue { background: #4A90D9; }
+
+  /* Features Section */
+  .features {
+    padding: 6rem 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-title {
+    font-size: 2rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #FFFFFF;
+  }
+
+  .section-sub {
+    text-align: center;
+    color: #666;
+    margin-bottom: 4rem;
+    font-size: 1.1rem;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .feature-card {
+    background: #1A1A1A;
+    border: 1px solid #2A2A2A;
+    border-radius: 16px;
+    padding: 2rem;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+
+  .feature-card:hover {
+    border-color: #00D4FF;
+    transform: translateY(-2px);
+  }
+
+  .feature-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .feature-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #FFFFFF;
+  }
+
+  .feature-card p {
+    font-size: 0.9rem;
+    color: #888888;
+    line-height: 1.6;
+  }
+
+  /* Pipeline Section */
+  .pipeline {
+    padding: 6rem 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .pipeline-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 3rem;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: #1A1A1A;
+    border: 1px solid #2A2A2A;
+    border-radius: 12px;
+    padding: 1.2rem 1.5rem;
+  }
+
+  .step-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #00D4FF;
+    flex-shrink: 0;
+  }
+
+  .step-content {
+    flex: 1;
+  }
+
+  .step-content h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin-bottom: 0.2rem;
+  }
+
+  .step-content p {
+    font-size: 0.8rem;
+    color: #777;
+  }
+
+  .step-arrow {
+    color: #00D4FF;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  /* CTA */
+  .cta {
+    text-align: center;
+    padding: 6rem 2rem;
+    background: radial-gradient(ellipse at 50% 50%, rgba(0,212,255,0.05) 0%, transparent 60%);
+  }
+
+  .cta h2 {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  .cta p {
+    color: #888;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+  }
+
+  .btn {
+    display: inline-block;
+    background: #00D4FF;
+    color: #0D0D0D;
+    padding: 0.9rem 2.5rem;
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: all 0.3s;
+  }
+
+  .btn:hover {
+    background: #33DDFF;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0,212,255,0.3);
+  }
+
+  .btn-secondary {
+    display: inline-block;
+    background: transparent;
+    color: #FFFFFF;
+    padding: 0.9rem 2.5rem;
+    border-radius: 100px;
+    font-weight: 500;
+    font-size: 1rem;
+    text-decoration: none;
+    border: 1px solid #333;
+    margin-left: 1rem;
+    transition: all 0.3s;
+  }
+
+  .btn-secondary:hover {
+    border-color: #00D4FF;
+    color: #00D4FF;
+  }
+
+  .security-box {
+    margin-top: 3rem;
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .security-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #666;
+    font-size: 0.85rem;
+  }
+
+  .security-item .icon { font-size: 1.2rem; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 3rem 2rem;
+    border-top: 1px solid #1A1A1A;
+    color: #444;
+    font-size: 0.8rem;
+  }
+
+  .footer a { color: #666; text-decoration: none; }
+  .footer a:hover { color: #00D4FF; }
+
+  @media (max-width: 640px) {
+    .hero { padding: 1.5rem; }
+    .terminal { font-size: 0.7rem; padding: 1rem; }
+    .btn-secondary { margin-left: 0; margin-top: 1rem; display: block; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="grid-bg"></div>
+  <div class="logo">✦ douyin-to-obsidian</div>
+  <h1 class="title">抖音内容，秒变知识</h1>
+  <p class="subtitle">粘贴一条抖音链接，自动提取内容、语音转文字、生成结构化 Obsidian 笔记。零 API Key，纯本地运行。</p>
+  <div class="tagline">
+    Link. Extract. Note.
+    <small>SSR 解析 · 本地 Whisper · 错字修正 · 零凭证</small>
+  </div>
+
+  <div class="terminal">
+    <div class="terminal-line"><span class="prompt">$</span> <span class="cmd">python3 douyin_extract.py "https://v.douyin.com/xxxxx/"</span></div>
+    <div class="terminal-line"><span class="dim">│</span></div>
+    <div class="terminal-line"><span class="dim">│</span> <span class="highlight">🔍</span> Resolving douyin share link...</div>
+    <div class="terminal-line"><span class="dim">│</span> <span class="success">✅</span> SSR data parsed — <span class="highlight">video</span> detected</div>
+    <div class="terminal-line"><span class="dim">│</span> <span class="success">✅</span> Video downloaded (1.3 MB)</div>
+    <div class="terminal-line"><span class="dim">│</span> <span class="highlight">🔊</span> Extracting audio...</div>
+    <div class="terminal-line"><span class="dim">│</span> <span class="highlight">🤖</span> Transcribing with Whisper...</div>
+    <div class="terminal-line"><span class="dim">│</span> <span class="success">✅</span> Transcription complete (<span class="highlight">220 chars</span>)</div>
+    <div class="terminal-line"><span class="dim">│</span> <span class="comment"># 错字修正: 心软上学 → 形而上学</span></div>
+    <div class="terminal-line"><span class="dim">│</span> <span class="success">🧹</span> Temp files cleaned up</div>
+    <div class="terminal-line"><span class="dim">│</span></div>
+    <div class="terminal-line"><span class="prompt">$</span> <span class="success">✅</span> Note written to <span class="highlight">douyinobsidian/辩证思维/喜恶同因·瑕瑜互见·抖音笔记.md</span><span class="blink"> ▊</span></div>
+  </div>
+
+  <div class="badge-row">
+    <span class="badge"><span class="dot cyan"></span> 零 API Key</span>
+    <span class="badge"><span class="dot green"></span> 本地 Whisper</span>
+    <span class="badge"><span class="dot blue"></span> 跨平台</span>
+    <span class="badge"><span class="dot cyan"></span> 自动清理</span>
+  </div>
+</div>
+
+<div class="features">
+  <h2 class="section-title">核心能力</h2>
+  <p class="section-sub">从链接到笔记，全自动流水线</p>
+  
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🔗</div>
+      <h3>SSR 解析</h3>
+      <p>从抖音分享页公开数据中提取视频/图文信息，无需登录、无需 Cookie、零凭证。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎙️</div>
+      <h3>本地语音转文字</h3>
+      <p>faster-whisper 本地运行，音频不离机。支持 small 到 large-v3 多种模型。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">✏️</div>
+      <h3>错字自动修正</h3>
+      <p>内置 44 条中文修正规则，Whisper 常见听错自动纠正。「形而上学」不再被听成「心软上学」。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📷</div>
+      <h3>图文/多图/实况</h3>
+      <p>自动识别图文帖、多图轮播、实况图。有文字则 OCR，无文字则用 desc，有音频则转写。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📝</div>
+      <h3>结构化输出</h3>
+      <p>meta.json + transcript.txt + 时间戳分段。按主题自动归类到 douyinobsidian/ 目录。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <h3>隐私优先</h3>
+      <p>零 API Key、零数据上传、零残留。视频/音频文件转录后自动删除，不留痕迹。</p>
+    </div>
+  </div>
+</div>
+
+<div class="pipeline">
+  <h2 class="section-title">内容判断模型</h2>
+  <p class="section-sub">Agent 根据 SSR 数据自动判断提取策略</p>
+
+  <div class="pipeline-steps">
+    <div class="step">
+      <span class="step-num">🎬</span>
+      <div class="step-content">
+        <h4>视频口播</h4>
+        <p>Whisper 转写音频 → 为主要内容</p>
+      </div>
+      <span class="step-arrow">→</span>
+    </div>
+    <div class="step">
+      <span class="step-num">🎞️</span>
+      <div class="step-content">
+        <h4>实况图（图片 + 短语音）</h4>
+        <p>音频转写 + desc 文案 结合</p>
+      </div>
+      <span class="step-arrow">→</span>
+    </div>
+    <div class="step">
+      <span class="step-num">📷</span>
+      <div class="step-content">
+        <h4>多图/图文作品</h4>
+        <p>检查图片是否有文字 → 有则 OCR / 无则只用 desc</p>
+      </div>
+      <span class="step-arrow">→</span>
+    </div>
+    <div class="step">
+      <span class="step-num">📄</span>
+      <div class="step-content">
+        <h4>纯文字帖</h4>
+        <p>直接用 desc 文案</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cta">
+  <h2>开始使用</h2>
+  <p>一键安装，立即体验</p>
+  <div>
+    <a href="https://github.com/Ruanzhou9/douyin-to-obsidian" class="btn" target="_blank">GitHub 仓库 →</a>
+    <a href="https://github.com/Ruanzhou9/douyin-to-obsidian#%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B" class="btn-secondary" target="_blank">安装指南</a>
+  </div>
+  <div class="security-box">
+    <span class="security-item"><span class="icon">🔑</span> 零凭证</span>
+    <span class="security-item"><span class="icon">🖥️</span> 纯本地</span>
+    <span class="security-item"><span class="icon">🧹</span> 自动清理</span>
+    <span class="security-item"><span class="icon">🌐</span> 跨平台</span>
+    <span class="security-item"><span class="icon">📖</span> MIT 开源</span>
+  </div>
+</div>
+
+<div class="footer">
+  <p><a href="https://github.com/Ruanzhou9/douyin-to-obsidian">douyin-to-obsidian</a> · MIT License · Made with ❤️</p>
+</div>
+
+</body>
+</html>
