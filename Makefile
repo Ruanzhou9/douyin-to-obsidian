@@ -17,21 +17,18 @@ install:
 	.venv/bin/pip install imageio-ffmpeg
 	@echo "Run 'source .venv/bin/activate' to activate"
 
-# Quick test
+# Quick sanity test. Uses env var PYTHON if set, else the interpreter that has the deps.
+PY ?= python3
+
 test:
-	.venv/bin/python3 -c "
-import requests, yt_dlp, zhconv, json
-from pathlib import Path
-print('All core deps: OK')
-try:
-	import imageio_ffmpeg
-	print(f'ffmpeg: {imageio_ffmpeg.get_ffmpeg_exe()}')
-except:
-	print('ffmpeg: not found')
-import douyin_to_obsidian.extract as e
-c = e._load_corrections()
-print(f'Corrections: {len(c)} rules')
-"
+	$(PY) -c "import sys; sys.path.insert(0, '.'); \
+import douyin_to_obsidian.extract as e; \
+import douyin_to_obsidian.browser_fallback as bf; \
+print('extract import: OK'); \
+print('browser_fallback import: OK'); \
+c = e._load_corrections(); \
+print(f'corrections: {len(c)} definite + {len(e._AMBIGUOUS)} ambiguous'); \
+print('test: PASS')"
 
 # Clean temp files
 clean:
