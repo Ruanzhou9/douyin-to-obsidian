@@ -3,3 +3,4 @@ yt-dlp>=2024.12.0
 faster-whisper>=1.1.0
 zhconv>=1.4.3
 imageio-ffmpeg>=0.6.0  # optional: bundles ffmpeg binary for systems without it
+playwright>=1.40.0     # optional: browser fallback when SSR/yt-dlp are blocked by anti-scraping

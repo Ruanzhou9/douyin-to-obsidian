@@ -99,7 +99,25 @@ Agent 根据 SSR 数据自动判断提取策略：
 3. 合并为完整转录文本
 4. Agent 总结为结构化笔记
 
-### BGM 处理
+## 浏览器兜底（反爬时）
+
+当 SSR 解析 + yt-dlp 都失败（抖音反爬，短链被 `No SSR data found` 拦截）时，用
+Playwright + 系统 Chrome 打开页面提取抖音自动生成的「章节要点」。
+
+**这是跨 Agent、跨平台的通用方案**（Hermes / Codex / OpenCode / Claude Code 通用），
+因为 Playwright 驱动真实浏览器执行 JS，能过反爬。无需下载浏览器内核（用系统 Chrome）。
+
+```bash
+pip install playwright   # 用系统 Chrome，无需下载
+
+# 浏览器兜底提取（SSR/yt-dlp 失败时）
+python3 scripts/douyin_browser_fallback.py "https://v.douyin.com/xxxxx/" --output /tmp/out
+```
+
+会提取：标题、aweme_id、内容类型、`章节要点`（抖音AI摘要）。注意：摘要是概要，
+**非口播完整转写**，作为 SSR 失败时的兜底内容来源。
+
+## BGM 处理
 
 背景音乐含人声时，Whisper 可能转写歌词而非口播。Agent 会：
 1. 检查转录是否包含重复段落（疑似歌词）
@@ -153,6 +171,7 @@ douyin-to-obsidian/
 │   └── text_corrections.json         # 错字修正规则（43确定+5含糊）
 ├── scripts/                          # 直接运行入口
 │   ├── douyin_extract.py
+│   ├── douyin_browser_fallback.py    # 反爬兜底（Playwright+Chrome）
 │   └── text_corrections.json
 ├── pyproject.toml                    # pip 安装配置
 ├── setup.sh                          # 一键安装脚本

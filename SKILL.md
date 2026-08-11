@@ -94,6 +94,9 @@ pip install requests yt-dlp faster-whisper zhconv
 #   Windows: winget install ffmpeg  or  choco install ffmpeg
 # Option B: Python fallback (auto-detected by script)
 pip install imageio-ffmpeg
+
+# Playwright (optional) — browser fallback when SSR/yt-dlp are blocked
+pip install playwright   # uses system Chrome, no browser download
 ```
 
 Verify: `python3 -c "import requests, yt_dlp, faster_whisper, zhconv; print('All deps OK')"`
@@ -206,11 +209,57 @@ The vault folder `douyinobsidian/` serves as the root collection. Each themed su
 
 Write the note to the user's Obsidian vault following their existing structure.
 
+## Browser Fallback (when SSR / yt-dlp fail)
+
+When SSR parsing **and** yt-dlp both fail (Douyin anti-scraping, common on short links
+that redirect and refuse to inject `_ROUTER_DATA`), fall back to a real browser.
+
+**Root cause**: plain `curl`, SSR, and headless `--dump-dom` all get blocked by Douyin
+(either no SSR data, or the page stuck at "视频数据加载中"). Only a browser that
+executes JS and passes anti-bot can read the dynamic content.
+
+### Cross-agent solution: Playwright + system Chrome
+
+`scripts/douyin_browser_fallback.py` is a cross-agent, cross-platform script that works
+identically for Hermes / Codex / OpenCode / Claude Code. It uses Playwright to drive the
+locally-installed Google Chrome (channel="chrome", **no browser download needed**) to:
+
+1. Open the share link (follows redirect)
+2. Wait for JS to render the dynamic page
+3. Extract `章节要点` (Douyin's AI chapter summary), title, and aweme_id
+
+The `章节要点` is Douyin's AI auto-summary — **not** the full oral transcript — but it
+captures the core content reliably even when download is blocked.
+
+### Usage
+
+```bash
+pip install playwright   # cross-agent, cross-platform
+
+# Browser fallback extraction
+python3 scripts/douyin_browser_fallback.py "https://v.douyin.com/xxxxx/" --output /tmp/out
+
+# As JSON
+python3 scripts/douyin_browser_fallback.py "https://v.douyin.com/xxxxx/" --output /tmp/out --json
+```
+
+Requires Google Chrome (or Chromium) installed on the machine. Output:
+`browser_{aweme_id}/chapter_summary.txt` + `meta.json`.
+
+### Workflow when main script fails
+
+1. Run `scripts/douyin_extract.py <url>` → if "No SSR data found", proceed.
+2. Try `yt-dlp --write-auto-sub --skip-download <url>` → if it also fails (cookies needed), proceed.
+3. Run `scripts/douyin_browser_fallback.py <url>`.
+4. Use the `章节要点` as the content source; **note to the user** that this is a summary,
+   not the full transcript (anti-scraping blocked direct download).
+5. Summarize into the Obsidian note as usual.
+
 ## Error Handling
 
 | Error | Likely Cause | Action |
 |-------|-------------|--------|
-| SSR data not found | Invalid link or douyin page change | Try yt-dlp: `yt-dlp --write-auto-sub --skip-download <URL>` |
+| SSR data not found | Invalid link or douyin anti-scraping | Try yt-dlp; if that fails, use `scripts/douyin_browser_fallback.py` (Playwright + Chrome) |
 | Video download failed | CDN timeout or expired | Retry with a fresh link |
 | ffmpeg not found | ffmpeg not installed | Install ffmpeg or `pip install imageio-ffmpeg` |
 | Whisper model download failed | Network blocked (China) | Set `HF_ENDPOINT=https://hf-mirror.com` before running |
