@@ -462,7 +462,7 @@ def download_video_ytdlp(url: str, out_dir: Path) -> Path:
 # Main pipeline
 # ---------------------------------------------------------------------------
 
-def process(share_text: str, output_dir: Path, model_size: str = "small") -> ExtractResult:
+def process(share_text: str, output_dir: Path, model_size: str = "auto") -> ExtractResult:
     """
     Full pipeline:
     1. Resolve SSR data → get meta + download URL
@@ -552,7 +552,22 @@ def process(share_text: str, output_dir: Path, model_size: str = "small") -> Ext
             else:
                 raise
 
-        # Transcribe
+        # Transcribe — auto-select model based on audio duration
+        if model_size == "auto":
+            try:
+                import wave
+                with wave.open(str(audio_path), 'r') as wf:
+                    duration = wf.getnframes() / wf.getframerate()
+            except Exception:
+                duration = 0
+            if duration < 30:
+                model_size = "small"
+            elif duration < 120:
+                model_size = "medium"
+            else:
+                model_size = "large-v3"
+            print(f"  🎯 Auto-selected model: {model_size} (audio: {duration:.0f}s)", file=sys.stderr)
+
         print(f"  🤖 Transcribing with Whisper ({model_size})...", file=sys.stderr)
         text, segments = transcribe(audio_path, model_size=model_size)
 
@@ -604,14 +619,38 @@ def main() -> int:
     parser.add_argument("url", nargs="?", help="Douyin share link")
     parser.add_argument("-o", "--output", type=Path, default=Path("douyin_output"),
                         help="Output directory (default: ./douyin_output)")
-    parser.add_argument("--model", default="small",
-                        choices=["tiny", "base", "small", "medium", "large-v2", "large-v3"],
-                        help="Whisper model size (default: small)")
+    parser.add_argument("--model", default="auto",
+                        choices=["auto", "tiny", "base", "small", "medium", "large-v2", "large-v3"],
+                        help="Whisper model size (default: auto — picks based on audio duration: <30s=small, <2min=medium, >2min=large-v3)")
     parser.add_argument("--json", action="store_true",
                         help="Output result as JSON to stdout")
     parser.add_argument("--corrections", type=Path, default=None,
                         help="Path to custom corrections JSON file (default: text_corrections.json next to script)")
+    parser.add_argument("--batch", type=Path, default=None,
+                        help="Batch mode: file containing douyin URLs, one per line")
     args = parser.parse_args()
+
+    # Batch mode
+    if args.batch:
+        urls = [line.strip() for line in args.batch.read_text(encoding="utf-8").splitlines()
+                if line.strip() and not line.startswith("#")]
+        if not urls:
+            print("Error: Batch file is empty.", file=sys.stderr)
+            return 1
+        print(f"📦 Batch mode: {len(urls)} URLs", file=sys.stderr)
+        _load_corrections(args.corrections)
+        success = 0
+        for i, url in enumerate(urls, 1):
+            print(f"\n[{i}/{len(urls)}] Processing: {url[:60]}...", file=sys.stderr)
+            try:
+                result = process(url, args.output, model_size=args.model)
+                meta = asdict(result.meta)
+                print(f"  ✅ {meta['content_type']} | {meta['title'][:50]}", file=sys.stderr)
+                success += 1
+            except Exception as e:
+                print(f"  ❌ Failed: {e}", file=sys.stderr)
+        print(f"\n📊 Batch complete: {success}/{len(urls)} succeeded", file=sys.stderr)
+        return 0 if success == len(urls) else 1
 
     share = args.url
     if not share:
