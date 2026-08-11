@@ -234,3 +234,8 @@ The `scripts/douyin_extract.py` script is a standalone CLI tool that:
 - Zero API keys, zero credentials
 
 **Recommended usage for best accuracy**: `--model large-v3` (slower first run due to ~3GB model download, but significantly better Chinese transcription).
+
+**Auto-model selection**: Default `--model auto` picks the model based on audio duration:
+- `< 30s` → `small` (fast, ~1GB model)
+- `30s–2min` → `medium` (balanced, ~3GB)
+- `> 2min` → `large-v3` (most accurate, ~3GB)

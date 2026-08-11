@@ -38,6 +38,9 @@ python3 scripts/douyin_extract.py "https://v.douyin.com/xxxxx/" --output ./outpu
 # 使用 large-v3 模型提高准确度（首次需下载 ~3GB）
 python3 scripts/douyin_extract.py "https://v.douyin.com/xxxxx/" --model large-v3
 
+# 强制使用 small 模型追求速度
+python3 scripts/douyin_extract.py "https://v.douyin.com/xxxxx/" --model small
+
 # 输出为 JSON
 python3 scripts/douyin_extract.py "https://v.douyin.com/xxxxx/" --json
 
