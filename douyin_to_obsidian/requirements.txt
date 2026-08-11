@@ -1,0 +1,5 @@
+requests>=2.31.0
+yt-dlp>=2024.12.0
+faster-whisper>=1.1.0
+zhconv>=1.4.3
+imageio-ffmpeg>=0.6.0  # optional: bundles ffmpeg binary for systems without it

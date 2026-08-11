@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "douyin-to-obsidian"
+version = "1.0.0"
+description = "Extract Douyin (抖音) video/image content, transcribe with Whisper, and save as structured Obsidian notes"
+authors = [
+    {name = "Hermes Agent"},
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.9"
+keywords = ["douyin", "obsidian", "whisper", "transcription", "notes"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Text Processing :: Linguistic",
+]
+
+dependencies = [
+    "requests>=2.31.0",
+    "yt-dlp>=2024.12.0",
+    "faster-whisper>=1.1.0",
+    "zhconv>=1.4.3",
+]
+
+[project.optional-dependencies]
+# Optional: bundles ffmpeg binary for systems without it
+ffmpeg = ["imageio-ffmpeg>=0.6.0"]
+# Optional: OCR for extracting text from images
+ocr = ["easyocr>=1.7"]
+# All optional deps
+full = ["douyin-to-obsidian[ffmpeg,ocr]"]
+
+[project.scripts]
+douyin-extract = "douyin_to_obsidian.extract:main"
+
+[tool.setuptools.packages.find]
+include = ["douyin_to_obsidian*"]
