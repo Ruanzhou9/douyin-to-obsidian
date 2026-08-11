@@ -572,11 +572,11 @@ def process(share_text: str, output_dir: Path, model_size: str = "small") -> Ext
 
     # Write output files
     meta_path = out_dir / "meta.json"
-    meta = asdict(meta)
+    meta_dict = asdict(meta)
     if ambiguous:
-        meta["ambiguous_corrections"] = ambiguous
+        meta_dict["ambiguous_corrections"] = ambiguous
     meta_path.write_text(
-        json.dumps(meta, ensure_ascii=False, indent=2),
+        json.dumps(meta_dict, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
 
