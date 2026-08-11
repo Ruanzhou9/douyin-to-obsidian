@@ -57,7 +57,7 @@ The agent determines which content source to use based on the SSR metadata:
 | SSR `content_type` | Has `image_urls` | Has audio | Agent decision |
 |-------------------|------------------|-----------|----------------|
 | `video` | — | ✅ | Run Whisper for **audio content**; desc is title only |
-| `image` | ✅ (has images) | ❌ | **Inspect images**: if they contain text (screenshots, posters, quotes) → OCR; if purely visual (scenery, portraits) → desc only |
+| `image` | ✅ (has images) | ❌ | **Inspect images**: if they contain text (screenshots, posters, quotes, knowledge cards) → **OCR all images** for full content; if purely visual (scenery, portraits) → desc only |
 | `image` | ❌ (no images) | ❌ | Use **desc** only (rare — pure text post) |
 | `live_photo` | ✅ | ✅ | Run Whisper for **audio** + desc for **text**; combine both |
 
@@ -132,7 +132,13 @@ Read `meta.json` and apply the **Content Decision Model**:
 | `image` | ❌ | ❌ | Use `transcript.txt` (desc) only |
 | `live_photo` | ✅ | ✅ | Combine **audio transcription** + **desc text** |
 
-**How to inspect images**: Download the first image URL from `meta.json`'s `image_urls[]` array. Use `vision_analyze` (if your agent has it) or `easyocr` to check if the image contains text (screenshots, posters, quotes). If yes → OCR all images; if no → scenery/visual → use desc only.
+**How to inspect images**: Download the first image URL from `meta.json`'s `image_urls[]` array. Use `vision_analyze` (if your agent has it) or `easyocr` to check if the image contains text (screenshots, posters, quotes, knowledge cards). If yes → OCR all images; if no → scenery/visual → use desc only.
+
+**Long image posts (知识卡片/多图连载)**: Some image posts contain text spread across multiple images (e.g., a 10-slide knowledge deck). The SSR desc only captures the title. For these:
+1. Download all images from `image_urls[]`
+2. OCR each image to extract text
+3. Combine all OCR results into a single transcript, noting which text came from which image
+4. The agent then summarizes the combined content into a structured note
 
 ### Step 3: Check for duplicates & ambiguous corrections
 
