@@ -34,11 +34,12 @@ from urllib.parse import unquote
 # ---------------------------------------------------------------------------
 
 _CORRECTIONS: dict[str, str] | None = None
+_AMBIGUOUS: dict[str, str] | None = None
 
 
 def _load_corrections(corrections_path: str | Path | None = None) -> dict[str, str]:
     """Load correction rules from JSON file. Returns flat {wrong: correct} dict."""
-    global _CORRECTIONS
+    global _CORRECTIONS, _AMBIGUOUS
     if _CORRECTIONS is not None:
         return _CORRECTIONS
 
@@ -53,18 +54,25 @@ def _load_corrections(corrections_path: str | Path | None = None) -> dict[str, s
             try:
                 raw = json.loads(path.read_text(encoding="utf-8"))
                 flat: dict[str, str] = {}
+                ambiguous: dict[str, str] = {}
                 for _section, rules in raw.items():
                     if isinstance(rules, dict):
                         for wrong, correct in rules.items():
                             if wrong.startswith("_"):
-                                continue  # skip comments
-                            flat[wrong] = correct
+                                continue  # skip comments/hints
+                            if _section == "_ambiguous":
+                                # Store ambiguous corrections separately
+                                ambiguous[wrong] = correct
+                            else:
+                                flat[wrong] = correct
                 _CORRECTIONS = flat
+                _AMBIGUOUS = ambiguous
                 return flat
             except (json.JSONDecodeError, KeyError):
                 pass
 
     _CORRECTIONS = {}
+    _AMBIGUOUS = {}
     return _CORRECTIONS
 
 
@@ -73,10 +81,21 @@ def apply_corrections(text: str, corrections_path: str | Path | None = None) -> 
     rules = _load_corrections(corrections_path)
     if not rules:
         return text
-    # Sort by length descending so longer matches are applied first
     for wrong, correct in sorted(rules.items(), key=lambda x: -len(x[0])):
         text = text.replace(wrong, correct)
     return text
+
+
+def get_ambiguous_matches(text: str, corrections_path: str | Path | None = None) -> list[dict]:
+    """Find ambiguous corrections that matched the text, for user review."""
+    _load_corrections(corrections_path)
+    if not _AMBIGUOUS:
+        return []
+    matches = []
+    for wrong, correct in sorted(_AMBIGUOUS.items(), key=lambda x: -len(x[0])):
+        if wrong in text:
+            matches.append({"matched": wrong, "suggestions": correct, "position": text.index(wrong)})
+    return matches
 
 # ---------------------------------------------------------------------------
 # Types
@@ -544,10 +563,20 @@ def process(share_text: str, output_dir: Path, model_size: str = "small") -> Ext
             audio_path.unlink()
         print(f"  🧹 Temp files cleaned up", file=sys.stderr)
 
+    # Check for ambiguous corrections
+    ambiguous = get_ambiguous_matches(text)
+    if ambiguous:
+        print(f"  ⚠️ Ambiguous corrections found — review needed:", file=sys.stderr)
+        for m in ambiguous:
+            print(f"     \"{m['matched']}\" → {m['suggestions']}", file=sys.stderr)
+
     # Write output files
     meta_path = out_dir / "meta.json"
+    meta = asdict(meta)
+    if ambiguous:
+        meta["ambiguous_corrections"] = ambiguous
     meta_path.write_text(
-        json.dumps(asdict(meta), ensure_ascii=False, indent=2),
+        json.dumps(meta, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
 

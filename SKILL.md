@@ -65,6 +65,11 @@ The agent determines which content source to use based on the SSR metadata:
 - Download the first image and use `vision_analyze` (if available) to check for text content
 - Or use OCR (easyocr) to extract text from all images
 
+**BGM (background music) handling**: If the video has background music with vocals, Whisper may transcribe the song lyrics instead of or mixed with the voiceover. The agent should:
+1. Check if the transcription contains repeated phrases that look like song lyrics (choruses)
+2. If suspected, warn the user: "转录可能包含背景音乐歌词，请核对"
+3. Audio source separation (demucs) is a planned future enhancement
+
 **OCR fallback (for image text)**: `pip install easyocr` — cross-platform, good Chinese OCR. Run on downloaded images when text content is detected.
 
 ## Security Model (for open source)
@@ -129,7 +134,13 @@ Read `meta.json` and apply the **Content Decision Model**:
 
 **How to inspect images**: Download the first image URL from `meta.json`'s `image_urls[]` array. Use `vision_analyze` (if your agent has it) or `easyocr` to check if the image contains text (screenshots, posters, quotes). If yes → OCR all images; if no → scenery/visual → use desc only.
 
-### Step 3: Summarize & format
+### Step 3: Check for duplicates & ambiguous corrections
+
+**Duplicate detection**: Before writing a new note, search the existing `douyinobsidian/` directory for similar content. If a note with similar text already exists, warn the user and ask: skip / merge / create new.
+
+**Ambiguous corrections**: The script may flag ambiguous corrections in `meta.json`'s `ambiguous_corrections` field. When present, show these to the user for manual review before finalizing the note.
+
+### Step 4: Summarize & format
 
 **Short content** (< 100 chars): keep as a quote/insight note.  
 **Long content** (100+ chars): summarize with sections, extract key points.
@@ -185,7 +196,7 @@ douyinobsidian/
 
 The vault folder `douyinobsidian/` serves as the root collection. Each themed subdirectory groups related notes. The note's primary tag (first meaningful hashtag from the video title) determines the subdirectory name. If no relevant hashtag exists, use `未分类/`.
 
-### Step 4: Write to vault
+### Step 5: Write to vault
 
 Write the note to the user's Obsidian vault following their existing structure.
 
@@ -201,6 +212,8 @@ Write the note to the user's Obsidian vault following their existing structure.
 | Low transcription accuracy | Small model or poor audio quality | Retry with `--model large-v3` for best Chinese accuracy |
 | OCR fails / no text found | Image has no readable text, or easyocr not installed | Fall back to `transcript.txt` (desc text) only |
 | easyocr model download failed | Network blocked (China) | Set `HF_ENDPOINT=https://hf-mirror.com` or use `vision_analyze` instead |
+| Transcription contains song lyrics | Video has background music (BGM) with vocals | Whisper may transcribe BGM lyrics instead of/near voiceover. Check `meta.json` for `bgm_detected` flag. Audio source separation (demucs) is a future enhancement. |
+| Duplicate content detected | Similar note already exists in vault | Agent will warn and ask user whether to skip, merge, or create a new note. |
 
 ## Script Reference
 
