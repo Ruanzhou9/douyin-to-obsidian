@@ -295,6 +295,20 @@ partially-failed videos.
 | easyocr model download failed | Network blocked (China) | Set `HF_ENDPOINT=https://hf-mirror.com` or use `vision_analyze` instead |
 | Transcription contains song lyrics | Video has background music (BGM) with vocals | Whisper may transcribe BGM lyrics instead of/near voiceover. Check `meta.json` for `bgm_detected` flag. Audio source separation (demucs) is a future enhancement. |
 | Duplicate content detected | Similar note already exists in vault | Agent will warn and ask user whether to skip, merge, or create a new note. |
+| `/note/` 图文帖被误判为 video | SSR returns video content_type for an image note (anti-scraping edge case), causing a download attempt that fails | Run `scripts/douyin_browser_fallback.py` — it correctly identifies `content_type: image`. Use the title/desc (no speech on image notes). |
+| English / non-Chinese audio | Video is a TED talk or foreign-language clip | Works automatically via `language=None` auto-detection. Chinese summary + quote original-language lines verbatim. |
+
+## Real-World Edge Cases (from live testing)
+
+These were discovered during actual use and are worth knowing:
+
+1. **`/note/` image posts mis-detected as video**: On some short links that SSR can't fully resolve, a `/note/` (image post) is classified as `content_type: video`, leading to a download that fails (`Unsupported URL`). **Fix**: fall back to the browser fallback script, which correctly reports `content_type: image` — then use title/desc (no speech to transcribe).
+
+2. **Non-Chinese (English etc.) content**: TED-style clips transcribe correctly in their original language thanks to `language=None`. Blog notes are written in Chinese but **original-language quotes are kept verbatim** (do not translate the quote lines).
+
+3. **Empty transcript in a video**: If Whisper returns blank for a video (silent track), batch mode auto-falls back to the browser chapter summary (`source=browser_fallback`).
+
+4. **Ambiguous corrections with clear context**: `ambiguous_corrections` items (e.g. `一次` → `辩证/一次`) should only be raised to the user when the context genuinely changes the meaning. If context is clear, resolve directly.
 
 ## Script Reference
 
