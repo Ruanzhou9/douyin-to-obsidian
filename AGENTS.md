@@ -29,7 +29,7 @@
 
 | 文件 | 理由 |
 |------|------|
-| `promo.html` | 宣传页面，与功能无关 |
+| `docs/promo.html` | 宣传页面，与功能无关 |
 | `Makefile` | 开发辅助，非核心 |
 | `setup.sh` | 一键安装脚本，可跳过 |
 | `pyproject.toml` | pip 打包配置，无需读 |

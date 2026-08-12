@@ -5,6 +5,15 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/)
 
+## 10 秒速览
+- **这是什么**：把抖音分享链接转为结构化 Obsidian 笔记
+- **什么时候用**：有抖音链接需要提取文案/转写视频/保存到 Obsidian
+- **什么时候不用**：需要抖音登录/付费 API/云端处理
+- **快速开始**：`bash setup.sh` → `python3 scripts/douyin_extract.py "https://v.douyin.com/xxxxx/" --output ./output`
+- **依赖**：Python 3.9+、ffmpeg（视频转写时）
+
+---
+
 ## 功能
 
 - 🔗 **解析抖音分享链接**：支持 `v.douyin.com` 短链、`www.douyin.com` 长链、`iesdouyin.com` 分享页
