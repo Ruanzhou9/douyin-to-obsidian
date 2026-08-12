@@ -281,30 +281,6 @@ summary instead of silently returning empty. `meta.json` is marked `"source":
 "browser_fallback"` and `"is_summary": true`. This makes batch runs robust to
 partially-failed videos.
 
-## 剪贴板监听模式（一键自动处理）
-
-无需手动粘贴每个链接。后台运行监听器，复制抖音链接即自动提取：
-
-```bash
-# 安装依赖（首次）
-pip install pyperclip
-
-# 启动监听器（持续运行）
-python3 scripts/douyin_clipboard_watcher.py
-
-# 只处理一次当前剪贴板内容
-python3 scripts/douyin_clipboard_watcher.py --once
-```
-
-**工作方式：**
-- 每 3 秒检查剪贴板
-- 自动检测 `v.douyin.com`、`www.douyin.com`、`iesdouyin.com` 链接
-- 调用完整提取流程（SSR → 下载 → 转写 → 写笔记）
-- 5 分钟内相同链接不重复处理
-- 关闭终端窗口或按 `Ctrl+C` 停止
-
-**批量粘贴：** 复制多行文本（含多个链接），监听器会自动提取所有抖音链接逐一处理。
-
 ## Error Handling
 
 | Error | Likely Cause | Action |
