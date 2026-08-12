@@ -17,7 +17,13 @@
 |------|------|----------|
 | `douyin_to_obsidian/extract.py` | 核心提取引擎（SSR 解析 + Whisper 转写 + OCR） | ⚠️ 需要时读 |
 | `douyin_to_obsidian/browser_fallback.py` | Playwright 反爬兜底 | ⚠️ SSR 失败时读 |
-| `douyin_to_obsidian/text_corrections.json` | 43 条 Whisper 错字修正 | ⚠️ 需要时读 |
+| `douyin_to_obsidian/text_corrections.json` | 45 条确定 + 5 条含糊 Whisper 错字修正 | ⚠️ 需要时读 |
+
+## 关键能力
+
+- `--batch /path/urls.txt`：批量处理多个链接（每行一个 URL，`#` 为注释）
+- **自动浏览器兜底**：批量中某条 Whisper 返回空转录时，自动用 Playwright+Chrome 提取「章节要点」补上，`meta.json` 标记 `source=browser_fallback`
+- **自动选模型**：默认 `--model auto`，按音频时长选 small/medium/large-v3
 
 ## 可直接跳过的文件（节省 token）
 

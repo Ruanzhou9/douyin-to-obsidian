@@ -259,6 +259,21 @@ Requires Google Chrome (or Chromium) installed on the machine. Output:
    not the full transcript (anti-scraping blocked direct download).
 5. Summarize into the Obsidian note as usual.
 
+## Batch Mode
+
+Process multiple links in one run. Create a file with one URL per line (`#` = comment):
+
+```bash
+python3 scripts/douyin_extract.py --batch /tmp/urls.txt --output ./output
+```
+
+**Auto-fallback on empty transcript**: In batch mode, if Whisper returns an empty
+transcript for a video (e.g. SSR parsed OK but the audio track is silent/broken),
+the script **automatically** runs the browser fallback and patches in the chapter
+summary instead of silently returning empty. `meta.json` is marked `"source":
+"browser_fallback"` and `"is_summary": true`. This makes batch runs robust to
+partially-failed videos.
+
 ## Error Handling
 
 | Error | Likely Cause | Action |

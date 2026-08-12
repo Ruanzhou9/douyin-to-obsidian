@@ -608,6 +608,38 @@ def process(share_text: str, output_dir: Path, model_size: str = "auto") -> Extr
     return ExtractResult(meta=meta, text=text, segments=segments, out_dir=out_dir)
 
 
+def _browser_fallback_patch(url: str, result: ExtractResult) -> ExtractResult:
+    """When Whisper returns an empty transcript, patch in the chapter summary
+    obtained via the Playwright browser fallback (if available).
+
+    Returns an ExtractResult whose .text is either the browser chapter summary
+    (cleaned of leading '章节要点' label) or the original empty text if the
+    browser fallback also fails.
+    """
+    try:
+        from douyin_to_obsidian.browser_fallback import extract_with_playwright
+        fb = extract_with_playwright(url)
+        if fb.success and fb.chapter_summary:
+            # Strip the leading "章节要点" label if present
+            summary = fb.chapter_summary
+            summary = re.sub(r"^章节要点\s*", "", summary).strip()
+            # Merge into result: use chapter summary as the text; keep original meta
+            out_dir = result.out_dir
+            (out_dir / "chapter_summary.txt").write_text(summary + "\n", encoding="utf-8")
+            meta = asdict(result.meta)
+            meta["source"] = "browser_fallback"
+            meta["is_summary"] = True
+            (out_dir / "meta.json").write_text(
+                json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            return ExtractResult(
+                meta=result.meta, text=summary, segments=result.segments, out_dir=out_dir
+            )
+    except Exception as e:
+        print(f"  ⚠️ Browser fallback also failed: {e}", file=sys.stderr)
+    return result
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -644,8 +676,14 @@ def main() -> int:
             print(f"\n[{i}/{len(urls)}] Processing: {url[:60]}...", file=sys.stderr)
             try:
                 result = process(url, args.output, model_size=args.model)
+                # If transcription is empty (e.g. SSR parsed but Whisper returned blank,
+                # or a silent/broken audio track), auto-fall back to browser chapter summary.
+                if not result.text.strip():
+                    print(f"  ⚠️ Empty transcript — auto browser-fallback...", file=sys.stderr)
+                    result = _browser_fallback_patch(url, result)
                 meta = asdict(result.meta)
-                print(f"  ✅ {meta['content_type']} | {meta['title'][:50]}", file=sys.stderr)
+                tag = "🎬" if meta['content_type'] == "video" else "📷"
+                print(f"  {tag} {meta['title'][:50]} ({len(result.text.strip())} chars)", file=sys.stderr)
                 success += 1
             except Exception as e:
                 print(f"  ❌ Failed: {e}", file=sys.stderr)

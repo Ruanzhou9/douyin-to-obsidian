@@ -46,6 +46,17 @@ python3 scripts/douyin_extract.py "https://v.douyin.com/xxxxx/" --json
 
 # 使用自定义错字修正文件
 python3 scripts/douyin_extract.py "https://v.douyin.com/xxxxx/" --corrections ./my_corrections.json
+
+# 批量模式：从文件读取多个链接，每行一个（# 开头为注释）
+cat > /tmp/urls.txt << 'EOF'
+https://v.douyin.com/xxxxx/
+# 这是注释
+https://v.douyin.com/yyyyy/
+EOF
+python3 scripts/douyin_extract.py --batch /tmp/urls.txt --output ./output
+
+# 批量模式遇到空转录时自动浏览器兜底（章节摘要）
+# 若某条 Whisper 返回空（无声/音频损坏），会自动用 Playwright+Chrome 提取章节摘要补上
 ```
 
 ### Agent 使用（Hermes / Codex / OpenCode / Claude Code）
