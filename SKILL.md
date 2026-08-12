@@ -147,7 +147,11 @@ Read `meta.json` and apply the **Content Decision Model**:
 
 **Duplicate detection**: Before writing a new note, search the existing `douyinobsidian/` directory for similar content. If a note with similar text already exists, warn the user and ask: skip / merge / create new.
 
-**Ambiguous corrections**: The script may flag ambiguous corrections in `meta.json`'s `ambiguous_corrections` field. When present, show these to the user for manual review before finalizing the note.
+**Ambiguous corrections**: The script may flag ambiguous corrections in `meta.json`'s `ambiguous_corrections` field. When present:
+- **If the context makes the meaning clear**, the agent may resolve it directly and note the choice (e.g. `一次` in "承受一次痛苦" is clearly "一次", not "辩证"). No need to bother the user.
+- **Only when the context is genuinely ambiguous** (either meaning changes the note's significance), ask the user to decide before finalizing.
+
+**Unknown Whisper misrecognitions**: The corrections dictionary (`text_corrections.json`) covers common errors and is applied automatically in the `transcribe()` path. But new/missed errors will slip through (e.g. `图难→困难`, `原木→原路`). When reading a transcript, fix any remaining obvious errors manually. If a misrecognition is likely to recur, **add it to the corrections dictionary** so future runs fix it automatically.
 
 ### Step 4: Summarize & format
 
