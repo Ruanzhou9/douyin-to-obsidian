@@ -25,4 +25,4 @@ Thumbs.db
 
 # Environment
 .env
-config.py
+config.py.clipboard_history.json
