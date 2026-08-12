@@ -431,9 +431,11 @@ def transcribe(audio_path: Path, model_size: str = "small") -> tuple[str, list[d
     from faster_whisper import WhisperModel
 
     model = WhisperModel(model_size, device="auto", compute_type="default")
+    # language=None => auto-detect. Handles Chinese, English, Japanese, Korean, etc.
+    # (Hardcoding "zh" would force non-Chinese audio through Chinese recognition -> garbled.)
     segments_iter, _info = model.transcribe(
         str(audio_path),
-        language="zh",
+        language=None,
         vad_filter=True,
         beam_size=5,
     )

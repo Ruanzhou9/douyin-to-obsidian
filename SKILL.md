@@ -70,6 +70,13 @@ The agent determines which content source to use based on the SSR metadata:
 2. If suspected, warn the user: "转录可能包含背景音乐歌词，请核对"
 3. Audio source separation (demucs) is a planned future enhancement
 
+**Multi-language support**: `transcribe()` auto-detects the audio language (`language=None`)
+instead of hardcoding Chinese. Chinese, English, Japanese, Korean, etc. are all recognized.
+The corrections dictionary (`text_corrections.json`) targets Chinese misrecognitions only —
+for other languages it is a no-op (no matches → no changes), which is safe. Note: the Obsidian
+note template is still Chinese-oriented; for a non-Chinese video the agent should summarize in
+the user's preferred language (typically Chinese) while quoting original content as-is.
+
 **OCR fallback (for image text)**: `pip install easyocr` — cross-platform, good Chinese OCR. Run on downloaded images when text content is detected.
 
 ## Security Model (for open source)

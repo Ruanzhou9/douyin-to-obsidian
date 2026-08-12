@@ -11,6 +11,33 @@ Usage:
 
 Security: No API keys, no credentials, local Whisper, temp file cleanup.
 Cross-platform: Windows / macOS / Linux.
+
+# ════ 函数导航 ════
+# 40  _load_corrections          — 加载错字修正 JSON
+# 79  apply_corrections          — 应用错字修正
+# 89  get_ambiguous_matches      — 获取含糊修正标记
+# 105 class DouyinMeta           — 元数据容器
+# 116 class ExtractResult        — 提取结果容器
+# 145 _session                   — 创建 requests session
+# 155 expand_share_url           — 展开短链
+# 166 normalize_to_share_page    — 标准化到分享页
+# 177 extract_aweme_id           — 提取作品 ID
+# 194 _parse_router_data         — 解析 SSR router data
+# 205 _parse_render_data         — 解析 SSR render data
+# 215 _find_item_list            — 查找 item 列表
+# 234 _build_no_watermark_url    — 构建无水印播放 URL
+# 244 _extract_image_urls        — 提取图片 URL 列表
+# 259 _has_playable_video        — 判断是否有可播放视频
+# 267 _meta_from_item            — 从 item 构建 DouyinMeta
+# 313 resolve_ssr               — SSR 解析主入口
+# 351 _find_ffmpeg               — 查找 ffmpeg 路径
+# 365 extract_audio              — 提取视频音频
+# 393 to_simplified_chinese      — 繁体转简体
+# 399 transcribe                — Whisper 语音转文字
+# 436 download_video_ytdlp       — 下载视频
+# 465 process                   — 核心处理流程
+# 611 _browser_fallback_patch    — 浏览器兜底
+# 647 main                      — CLI 入口
 """
 
 from __future__ import annotations
@@ -404,9 +431,11 @@ def transcribe(audio_path: Path, model_size: str = "small") -> tuple[str, list[d
     from faster_whisper import WhisperModel
 
     model = WhisperModel(model_size, device="auto", compute_type="default")
+    # language=None => auto-detect. Handles Chinese, English, Japanese, Korean, etc.
+    # (Hardcoding "zh" would force non-Chinese audio through Chinese recognition -> garbled.)
     segments_iter, _info = model.transcribe(
         str(audio_path),
-        language="zh",
+        language=None,
         vad_filter=True,
         beam_size=5,
     )
